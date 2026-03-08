@@ -29,6 +29,7 @@ export interface Board {
   id: string
   name: string
   workspaceId: string
+  workspace?: { ownerId: string }
   columns?: Column[]
 }
 
@@ -45,6 +46,13 @@ export interface Label {
   id: string
   name: string
   color: string
+  boardId?: string
+}
+
+export interface ChecklistItem {
+  id: string
+  text: string
+  done: boolean
 }
 
 export interface CardLabel {
@@ -67,4 +75,5 @@ export interface Card {
   createdAt: string
   assignees: CardAssignee[]
   labels: CardLabel[]
+  checklistItems?: ChecklistItem[]
 }

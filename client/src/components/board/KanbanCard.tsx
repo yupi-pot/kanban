@@ -70,7 +70,10 @@ export function KanbanCard({ card, boardId, isDragging, isActiveCard }: Props) {
           ))}
         </div>
 
-        <p className="text-[13px] text-[#E8E8F0] leading-snug mb-2">{card.title}</p>
+        <p className="text-[13px] text-[#E8E8F0] leading-snug mb-1">{card.title}</p>
+        {card.description && (
+          <p className="text-[11px] text-[#6B6B80] leading-snug mb-2 line-clamp-2">{card.description}</p>
+        )}
 
         <div className="flex items-center justify-between gap-2">
           {card.dueDate && (

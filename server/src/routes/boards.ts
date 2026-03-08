@@ -13,6 +13,7 @@ boardRouter.get('/:id', async (req: AuthRequest, res: Response) => {
       workspace: { members: { some: { userId: req.userId } } },
     },
     include: {
+      workspace: { select: { ownerId: true } },
       columns: {
         orderBy: { order: 'asc' },
         include: {

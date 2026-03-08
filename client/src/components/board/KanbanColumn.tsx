@@ -4,8 +4,9 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useMutation } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { api } from '../../api/client'
+import { useBoardStore } from '../../store/boardStore'
 import { useT } from '../../store/langStore'
-import type { Column } from '../../types'
+import type { Card, Column } from '../../types'
 import { KanbanCard } from './KanbanCard'
 import { Input } from '../ui/Input'
 
@@ -14,12 +15,23 @@ interface Props {
   boardId: string
   activeCardId: string | null
   overId: string | null
+  canDelete?: boolean
+  filteredCards?: Card[]
 }
 
-export function KanbanColumn({ column, boardId, activeCardId, overId }: Props) {
+export function KanbanColumn({ column, boardId, activeCardId, overId, canDelete, filteredCards }: Props) {
+  const displayCards = filteredCards ?? column.cards
   const [addingCard, setAddingCard] = useState(false)
   const [cardTitle, setCardTitle] = useState('')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const { removeColumn } = useBoardStore()
   const t = useT()
+
+  const deleteColMutation = useMutation({
+    mutationFn: () => api.delete(`/columns/${column.id}`),
+    onSuccess: () => removeColumn(column.id),
+    onError: () => setConfirmDelete(false),
+  })
 
   const { setNodeRef: setDropRef, isOver } = useDroppable({
     id: column.id,
@@ -42,12 +54,44 @@ export function KanbanColumn({ column, boardId, activeCardId, overId }: Props) {
   return (
     <div className="flex flex-col w-72 shrink-0 h-full max-h-full">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3 px-1">
+      <div className="flex items-center gap-2 mb-3 px-1 group/header">
         <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: column.color }} />
         <span className="text-[13px] font-semibold text-[#E8E8F0] flex-1">{column.name}</span>
         <span className="text-[11px] text-[#6B6B80] bg-[#2A2A38] px-1.5 py-0.5 rounded-[4px]">
-          {column.cards.length}
+          {filteredCards ? `${filteredCards.length}/${column.cards.length}` : column.cards.length}
         </span>
+        {canDelete && (
+          confirmDelete ? (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => deleteColMutation.mutate()}
+                disabled={deleteColMutation.isPending}
+                className="text-[11px] text-[#FF4D6A] hover:text-white bg-[#FF4D6A]/10 hover:bg-[#FF4D6A] border border-[#FF4D6A]/40 px-2 py-0.5 rounded-[4px] transition-all cursor-pointer disabled:opacity-50"
+              >
+                {deleteColMutation.isPending ? '...' : t.deleteColumnConfirm}
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                className="text-[11px] text-[#6B6B80] hover:text-[#E8E8F0] px-1.5 py-0.5 rounded-[4px] transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="opacity-0 group-hover/header:opacity-100 text-[#6B6B80] hover:text-[#FF4D6A] transition-all cursor-pointer p-0.5 rounded-[4px] hover:bg-[#FF4D6A]/10"
+              title={t.deleteColumn}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+              </svg>
+            </button>
+          )
+        )}
       </div>
 
       {/* Cards area */}
@@ -61,7 +105,7 @@ export function KanbanColumn({ column, boardId, activeCardId, overId }: Props) {
         `}
       >
         <SortableContext items={column.cards.map((c) => c.id)} strategy={verticalListSortingStrategy}>
-          {column.cards.map((card, index) => {
+          {displayCards.map((card, index) => {
             const showDropLine = overId === card.id && activeCardId !== card.id
 
             return (
@@ -74,7 +118,7 @@ export function KanbanColumn({ column, boardId, activeCardId, overId }: Props) {
                   boardId={boardId}
                   isActiveCard={activeCardId === card.id}
                 />
-                {index === column.cards.length - 1 && isDraggingOver && overId === column.id && (
+                {index === displayCards.length - 1 && isDraggingOver && overId === column.id && (
                   <div className="h-0.5 rounded-full bg-[#7C5CFC] mx-1 my-0.5 shadow-[0_0_8px_rgba(124,92,252,0.6)]" />
                 )}
               </div>
@@ -82,7 +126,7 @@ export function KanbanColumn({ column, boardId, activeCardId, overId }: Props) {
           })}
         </SortableContext>
 
-        {column.cards.length === 0 && isDraggingOver && (
+        {displayCards.length === 0 && isDraggingOver && (
           <div className="flex-1 flex items-center justify-center text-[12px] text-[#7C5CFC]/60 py-4">
             {t.dropHere}
           </div>

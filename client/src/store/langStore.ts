@@ -42,6 +42,8 @@ const translations = {
     creating: 'Создание...',
     out: 'Выйти',
     // Board
+    deleteColumn: 'Удалить колонку',
+    deleteColumnConfirm: 'Удалить?',
     addColumn: '+ Добавить колонку',
     addColumnTitle: 'Добавить колонку',
     columnName: 'Название колонки',
@@ -59,6 +61,7 @@ const translations = {
     deleteCard: 'Удалить',
     save: 'Сохранить',
     saving: 'Сохранение...',
+    saved: 'Сохранено ✓',
     addDescription: 'Добавить описание...',
     // Workspace page
     members: 'участников',
@@ -74,6 +77,33 @@ const translations = {
     selectWorkspace: 'Выберите или создайте пространство',
     realtimeOn: 'Реалтайм подключён',
     realtimeOff: 'Реалтайм отключён',
+    // Filters
+    filters: 'Фильтры',
+    search: 'Поиск...',
+    clearFilters: 'Сбросить',
+    overdue: 'Просрочено',
+    today: 'Сегодня',
+    thisWeek: 'Неделя',
+    // Labels
+    labels: 'Метки',
+    addLabel: 'Добавить метку',
+    labelName: 'Название метки',
+    // Comments
+    comments: 'Комментарии',
+    addComment: 'Добавить комментарий...',
+    send: 'Отправить',
+    // Checklist
+    checklist: 'Чеклист',
+    addItem: 'Добавить пункт',
+    // Settings
+    settings: 'Настройки',
+    workspaceSettings: 'Настройки воркспейса',
+    renameWorkspace: 'Переименовать',
+    removeMember: 'Удалить',
+    dangerZone: 'Опасная зона',
+    deleteWorkspace: 'Удалить воркспейс',
+    deleteWorkspaceConfirm: 'Удалить навсегда',
+    workspaceRenamed: 'Переименовано',
   },
   en: {
     signIn: 'Sign in',
@@ -95,6 +125,8 @@ const translations = {
     create: 'Create',
     creating: 'Creating...',
     out: 'Out',
+    deleteColumn: 'Delete column',
+    deleteColumnConfirm: 'Delete?',
     addColumn: '+ Add column',
     addColumnTitle: 'Add column',
     columnName: 'Column name',
@@ -111,6 +143,7 @@ const translations = {
     deleteCard: 'Delete',
     save: 'Save',
     saving: 'Saving...',
+    saved: 'Saved ✓',
     addDescription: 'Add a description...',
     members: 'members',
     inviteMember: 'Invite member',
@@ -124,6 +157,33 @@ const translations = {
     selectWorkspace: 'Select or create a workspace',
     realtimeOn: 'Realtime connected',
     realtimeOff: 'Realtime disconnected',
+    // Filters
+    filters: 'Filters',
+    search: 'Search...',
+    clearFilters: 'Clear',
+    overdue: 'Overdue',
+    today: 'Today',
+    thisWeek: 'This week',
+    // Labels
+    labels: 'Labels',
+    addLabel: 'Add label',
+    labelName: 'Label name',
+    // Comments
+    comments: 'Comments',
+    addComment: 'Add a comment...',
+    send: 'Send',
+    // Checklist
+    checklist: 'Checklist',
+    addItem: 'Add item',
+    // Settings
+    settings: 'Settings',
+    workspaceSettings: 'Workspace settings',
+    renameWorkspace: 'Rename',
+    removeMember: 'Remove',
+    dangerZone: 'Danger zone',
+    deleteWorkspace: 'Delete workspace',
+    deleteWorkspaceConfirm: 'Delete forever',
+    workspaceRenamed: 'Renamed',
   },
 }
 

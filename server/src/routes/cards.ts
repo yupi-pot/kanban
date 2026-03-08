@@ -58,6 +58,7 @@ const updateSchema = z.object({
   description: z.string().optional(),
   priority: z.enum(['URGENT', 'HIGH', 'MEDIUM', 'LOW']).optional(),
   dueDate: z.string().nullable().optional(),
+  checklistItems: z.array(z.object({ id: z.string(), text: z.string(), done: z.boolean() })).optional(),
   boardId: z.string(),
 })
 
@@ -79,12 +80,13 @@ cardRouter.patch('/:id', async (req: AuthRequest, res: Response) => {
     return
   }
 
-  const { boardId, dueDate, ...rest } = result.data
+  const { boardId, dueDate, checklistItems, ...rest } = result.data
   const updated = await prisma.card.update({
     where: { id: req.params.id },
     data: {
       ...rest,
       ...(dueDate !== undefined && { dueDate: dueDate ? new Date(dueDate) : null }),
+      ...(checklistItems !== undefined && { checklistItems }),
     },
     include: cardInclude,
   })
@@ -194,10 +196,131 @@ cardRouter.post('/:id/assign', async (req: AuthRequest, res: Response) => {
 
 cardRouter.delete('/:id/assign/:userId', async (req: AuthRequest, res: Response) => {
   const { boardId } = req.body
+  const card = await prisma.card.findFirst({
+    where: {
+      id: req.params.id,
+      column: { board: { workspace: { members: { some: { userId: req.userId } } } } },
+    },
+  })
+  if (!card) {
+    res.status(404).json({ error: 'Card not found' })
+    return
+  }
+
   await prisma.cardAssignee.deleteMany({
     where: { cardId: req.params.id, userId: req.params.userId },
   })
   const updated = await prisma.card.findUnique({ where: { id: req.params.id }, include: cardInclude })
   if (boardId) io.to(boardId).emit('card:updated', updated)
   res.json({ card: updated })
+})
+
+// Labels
+cardRouter.post('/:id/labels', async (req: AuthRequest, res: Response) => {
+  const { name, color, boardId } = req.body
+  if (!name || !color || !boardId) {
+    res.status(400).json({ error: 'name, color and boardId required' })
+    return
+  }
+
+  const card = await prisma.card.findFirst({
+    where: {
+      id: req.params.id,
+      column: { board: { workspace: { members: { some: { userId: req.userId } } } } },
+    },
+  })
+  if (!card) {
+    res.status(404).json({ error: 'Card not found' })
+    return
+  }
+
+  // Find or create label with this name+color in the board
+  let label = await prisma.label.findFirst({ where: { name, color, boardId } })
+  if (!label) {
+    label = await prisma.label.create({ data: { name, color, boardId } })
+  }
+
+  await prisma.cardLabel.upsert({
+    where: { cardId_labelId: { cardId: req.params.id, labelId: label.id } },
+    create: { cardId: req.params.id, labelId: label.id },
+    update: {},
+  })
+
+  const updated = await prisma.card.findUnique({ where: { id: req.params.id }, include: cardInclude })
+  io.to(boardId).emit('card:updated', updated)
+  res.json({ card: updated })
+})
+
+cardRouter.delete('/:id/labels/:labelId', async (req: AuthRequest, res: Response) => {
+  const { boardId } = req.body
+  const card = await prisma.card.findFirst({
+    where: {
+      id: req.params.id,
+      column: { board: { workspace: { members: { some: { userId: req.userId } } } } },
+    },
+  })
+  if (!card) {
+    res.status(404).json({ error: 'Card not found' })
+    return
+  }
+
+  await prisma.cardLabel.deleteMany({
+    where: { cardId: req.params.id, labelId: req.params.labelId },
+  })
+  const updated = await prisma.card.findUnique({ where: { id: req.params.id }, include: cardInclude })
+  if (boardId) io.to(boardId).emit('card:updated', updated)
+  res.json({ card: updated })
+})
+
+// Comments
+cardRouter.get('/:id/comments', async (req: AuthRequest, res: Response) => {
+  const card = await prisma.card.findFirst({
+    where: {
+      id: req.params.id,
+      column: { board: { workspace: { members: { some: { userId: req.userId } } } } },
+    },
+  })
+  if (!card) {
+    res.status(404).json({ error: 'Card not found' })
+    return
+  }
+
+  const comments = await prisma.activity.findMany({
+    where: { cardId: req.params.id, type: 'comment' },
+    include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+    orderBy: { createdAt: 'asc' },
+  })
+  res.json({ comments })
+})
+
+cardRouter.post('/:id/comments', async (req: AuthRequest, res: Response) => {
+  const { content, boardId } = req.body
+  if (!content || !boardId) {
+    res.status(400).json({ error: 'content and boardId required' })
+    return
+  }
+
+  const card = await prisma.card.findFirst({
+    where: {
+      id: req.params.id,
+      column: { board: { workspace: { members: { some: { userId: req.userId } } } } },
+    },
+  })
+  if (!card) {
+    res.status(404).json({ error: 'Card not found' })
+    return
+  }
+
+  const comment = await prisma.activity.create({
+    data: {
+      type: 'comment',
+      content,
+      payload: {},
+      userId: req.userId!,
+      cardId: req.params.id,
+      boardId,
+    },
+    include: { user: { select: { id: true, name: true, avatarUrl: true } } },
+  })
+  res.status(201).json({ comment })
 })

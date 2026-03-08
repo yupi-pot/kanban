@@ -73,11 +73,11 @@ columnRouter.delete('/:id', async (req: AuthRequest, res: Response) => {
   const column = await prisma.column.findFirst({
     where: {
       id: req.params.id,
-      board: { workspace: { members: { some: { userId: req.userId } } } },
+      board: { workspace: { owner: { id: req.userId } } },
     },
   })
   if (!column) {
-    res.status(404).json({ error: 'Column not found' })
+    res.status(403).json({ error: 'Only workspace owner can delete columns' })
     return
   }
 
@@ -105,6 +105,16 @@ columnRouter.post('/reorder', async (req: AuthRequest, res: Response) => {
     },
   })
   if (!board) {
+    res.status(403).json({ error: 'Access denied' })
+    return
+  }
+
+  const columnIds = result.data.columns.map((c) => c.id)
+  const validColumns = await prisma.column.findMany({
+    where: { id: { in: columnIds }, boardId: result.data.boardId },
+    select: { id: true },
+  })
+  if (validColumns.length !== columnIds.length) {
     res.status(403).json({ error: 'Access denied' })
     return
   }

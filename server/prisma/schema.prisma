@@ -85,18 +85,19 @@ model Column {
 }
 
 model Card {
-  id          String    @id @default(cuid())
-  title       String
-  description String?
-  order       Int
-  columnId    String
-  column      Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  priority    Priority  @default(MEDIUM)
-  dueDate     DateTime?
-  createdById String
-  createdBy   User      @relation("CardCreator", fields: [createdById], references: [id])
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             String    @id @default(cuid())
+  title          String
+  description    String?
+  order          Int
+  columnId       String
+  column         Column    @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  priority       Priority  @default(MEDIUM)
+  dueDate        DateTime?
+  createdById    String
+  createdBy      User      @relation("CardCreator", fields: [createdById], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  checklistItems Json      @default("[]")
 
   assignees  CardAssignee[]
   labels     CardLabel[]
@@ -120,10 +121,11 @@ model CardAssignee {
 }
 
 model Label {
-  id    String      @id @default(cuid())
-  name  String
-  color String
-  cards CardLabel[]
+  id      String      @id @default(cuid())
+  name    String
+  color   String
+  boardId String?
+  cards   CardLabel[]
 }
 
 model CardLabel {
@@ -138,7 +140,8 @@ model CardLabel {
 model Activity {
   id        String   @id @default(cuid())
   type      String
-  payload   Json
+  content   String?
+  payload   Json     @default("{}")
   userId    String
   user      User     @relation(fields: [userId], references: [id])
   boardId   String?

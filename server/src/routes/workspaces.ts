@@ -70,6 +70,65 @@ workspaceRouter.get('/:id', async (req: AuthRequest, res: Response) => {
   res.json({ workspace })
 })
 
+workspaceRouter.patch('/:id', async (req: AuthRequest, res: Response) => {
+  const { name } = req.body
+  if (!name || typeof name !== 'string' || !name.trim()) {
+    res.status(400).json({ error: 'Name required' })
+    return
+  }
+
+  const member = await prisma.workspaceMember.findFirst({
+    where: { workspaceId: req.params.id, userId: req.userId, role: 'OWNER' },
+  })
+  if (!member) {
+    res.status(403).json({ error: 'Only owners can rename workspace' })
+    return
+  }
+
+  const workspace = await prisma.workspace.update({
+    where: { id: req.params.id },
+    data: { name: name.trim() },
+    include: {
+      members: { include: { user: { select: { id: true, name: true, email: true, avatarUrl: true } } } },
+      _count: { select: { boards: true } },
+    },
+  })
+  res.json({ workspace })
+})
+
+workspaceRouter.delete('/:id/members/:userId', async (req: AuthRequest, res: Response) => {
+  const member = await prisma.workspaceMember.findFirst({
+    where: { workspaceId: req.params.id, userId: req.userId, role: 'OWNER' },
+  })
+  if (!member) {
+    res.status(403).json({ error: 'Only owners can remove members' })
+    return
+  }
+
+  if (req.params.userId === req.userId) {
+    res.status(400).json({ error: 'Cannot remove yourself' })
+    return
+  }
+
+  await prisma.workspaceMember.deleteMany({
+    where: { workspaceId: req.params.id, userId: req.params.userId },
+  })
+  res.json({ ok: true })
+})
+
+workspaceRouter.delete('/:id', async (req: AuthRequest, res: Response) => {
+  const member = await prisma.workspaceMember.findFirst({
+    where: { workspaceId: req.params.id, userId: req.userId, role: 'OWNER' },
+  })
+  if (!member) {
+    res.status(403).json({ error: 'Only owners can delete workspace' })
+    return
+  }
+
+  await prisma.workspace.delete({ where: { id: req.params.id } })
+  res.json({ ok: true })
+})
+
 workspaceRouter.post('/:id/invite', async (req: AuthRequest, res: Response) => {
   const { email } = req.body
   if (!email) {

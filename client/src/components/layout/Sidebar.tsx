@@ -86,15 +86,27 @@ export function Sidebar() {
 
         {wsData?.map((ws) => (
           <div key={ws.id}>
-            <button
-              onClick={() => navigate(`/w/${ws.id}`)}
-              className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] transition-colors text-left cursor-pointer ${workspaceId === ws.id ? 'bg-[#2A2A38] text-[#E8E8F0]' : 'text-[#6B6B80] hover:bg-[#2A2A38]/50 hover:text-[#E8E8F0]'}`}
-            >
-              <div className="w-5 h-5 rounded-[4px] bg-[#7C5CFC]/20 flex items-center justify-center text-[#7C5CFC] text-[10px] font-bold shrink-0">
-                {ws.name[0].toUpperCase()}
-              </div>
-              <span className="truncate">{ws.name}</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => navigate(`/w/${ws.id}`)}
+                className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-[6px] text-[13px] transition-colors text-left cursor-pointer ${workspaceId === ws.id ? 'bg-[#2A2A38] text-[#E8E8F0]' : 'text-[#6B6B80] hover:bg-[#2A2A38]/50 hover:text-[#E8E8F0]'}`}
+              >
+                <div className="w-5 h-5 rounded-[4px] bg-[#7C5CFC]/20 flex items-center justify-center text-[#7C5CFC] text-[10px] font-bold shrink-0">
+                  {ws.name[0].toUpperCase()}
+                </div>
+                <span className="truncate">{ws.name}</span>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/w/${ws.id}/settings`) }}
+                title={t.settings}
+                className={`p-1 rounded-[4px] transition-colors cursor-pointer shrink-0 ${workspaceId === ws.id ? 'text-[#6B6B80] hover:text-[#E8E8F0] hover:bg-[#3A3A50]' : 'text-transparent hover:text-[#6B6B80] hover:bg-[#2A2A38]/50 group-hover:text-[#6B6B80]'}`}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                </svg>
+              </button>
+            </div>
 
             {workspaceId === ws.id && wsDetail?.boards?.map((board: Board) => (
               <button

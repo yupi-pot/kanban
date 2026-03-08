@@ -98,6 +98,8 @@ authRouter.post('/login', async (req: Request, res: Response) => {
     return
   }
 
+  await prisma.refreshToken.deleteMany({ where: { userId: user.id } })
+
   const { accessToken, refreshToken } = generateTokens(user.id)
   await prisma.refreshToken.create({
     data: {

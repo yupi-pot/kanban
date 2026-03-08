@@ -6,6 +6,7 @@ import { useAuthStore } from './store/authStore'
 import { AuthPage } from './components/auth/AuthPage'
 import { Sidebar } from './components/layout/Sidebar'
 import { WorkspacePage } from './pages/WorkspacePage'
+import { WorkspaceSettingsPage } from './pages/WorkspaceSettingsPage'
 import { KanbanBoard } from './components/board/KanbanBoard'
 
 const queryClient = new QueryClient({
@@ -66,6 +67,7 @@ export default function App() {
               </div>
             } />
             <Route path="w/:workspaceId" element={<WorkspacePage />} />
+            <Route path="w/:workspaceId/settings" element={<WorkspaceSettingsPage />} />
             <Route path="w/:workspaceId/b/:boardId" element={<KanbanBoard />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />

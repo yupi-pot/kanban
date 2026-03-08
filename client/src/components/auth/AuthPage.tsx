@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '../ui/Input'
 import { Button } from '../ui/Button'
@@ -18,6 +19,8 @@ export function AuthPage() {
   const setUser = useAuthStore((s) => s.setUser)
   const { lang, toggle } = useLangStore()
   const t = useT()
+  const [searchParams] = useSearchParams()
+  const oauthError = searchParams.get('error') === 'oauth'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -58,6 +61,13 @@ export function AuthPage() {
         </div>
 
         <motion.div layout className="bg-[#1A1A24] border border-[#2A2A38] rounded-[12px] p-6 shadow-[0_24px_48px_rgba(0,0,0,0.4)]">
+          {/* OAuth error */}
+          {oauthError && (
+            <div className="mb-4 px-3 py-2 rounded-[8px] bg-red-500/10 border border-red-500/30 text-red-400 text-[12px]">
+              {lang === 'ru' ? 'Ошибка входа через OAuth. Попробуйте ещё раз.' : 'OAuth login failed. Please try again.'}
+            </div>
+          )}
+
           {/* OAuth */}
           <div className="flex flex-col gap-2 mb-5">
             <a

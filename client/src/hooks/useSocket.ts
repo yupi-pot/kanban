@@ -60,41 +60,55 @@ export function useBoardSocket(boardId: string | undefined) {
     if (s.connected) joinBoard()
     s.on('connect', joinBoard)
 
-    s.on('column:created', (column: Column) => addColumn(column))
-    s.on('column:updated', (column: Column) => updateColumn(column))
-    s.on('column:deleted', ({ id }: { id: string }) => removeColumn(id))
-    s.on('columns:reordered', (cols: { id: string; order: number }[]) => {
+    const onColumnCreated = (column: Column) => addColumn(column)
+    const onColumnUpdated = (column: Column) => updateColumn(column)
+    const onColumnDeleted = ({ id }: { id: string }) => removeColumn(id)
+    const onColumnsReordered = (cols: { id: string; order: number }[]) => {
       const current = useBoardStore.getState().columns
       setColumns(
         current
           .map((c) => ({ ...c, order: cols.find((x) => x.id === c.id)?.order ?? c.order }))
           .sort((a, b) => a.order - b.order)
       )
-    })
-
-    s.on('card:created', ({ card, columnId }: { card: Card; columnId: string }) => {
+    }
+    const onCardCreated = ({ card, columnId }: { card: Card; columnId: string }) => {
       const exists = useBoardStore.getState().columns
         .find(c => c.id === columnId)?.cards.some(k => k.id === card.id)
       if (!exists) addCard(card, columnId)
-    })
-    s.on('card:updated', (card: Card) => updateCard(card))
-    s.on('card:deleted', ({ id, columnId }: { id: string; columnId: string }) => removeCard(id, columnId))
-    s.on('card:moved', ({ card, sourceColumnId }: { card: Card; sourceColumnId: string }) => {
+    }
+    const onCardUpdated = (card: Card) => updateCard(card)
+    const onCardDeleted = ({ id, columnId }: { id: string; columnId: string }) => removeCard(id, columnId)
+    const onCardMoved = ({ card, sourceColumnId }: { card: Card; sourceColumnId: string }) => {
       const inSource = useBoardStore.getState().columns
         .find(c => c.id === sourceColumnId)?.cards.some(k => k.id === card.id)
-      if (inSource) moveCard(card.id, sourceColumnId, card.columnId, card.order)
-    })
+      if (inSource) {
+        // Another user moved this card — apply the full move
+        moveCard(card.id, sourceColumnId, card.columnId, card.order)
+      } else {
+        // Current user moved this card optimistically — sync server-authoritative order
+        updateCard(card)
+      }
+    }
+
+    s.on('column:created', onColumnCreated)
+    s.on('column:updated', onColumnUpdated)
+    s.on('column:deleted', onColumnDeleted)
+    s.on('columns:reordered', onColumnsReordered)
+    s.on('card:created', onCardCreated)
+    s.on('card:updated', onCardUpdated)
+    s.on('card:deleted', onCardDeleted)
+    s.on('card:moved', onCardMoved)
 
     return () => {
       s.off('connect', joinBoard)
-      s.off('column:created')
-      s.off('column:updated')
-      s.off('column:deleted')
-      s.off('columns:reordered')
-      s.off('card:created')
-      s.off('card:updated')
-      s.off('card:deleted')
-      s.off('card:moved')
+      s.off('column:created', onColumnCreated)
+      s.off('column:updated', onColumnUpdated)
+      s.off('column:deleted', onColumnDeleted)
+      s.off('columns:reordered', onColumnsReordered)
+      s.off('card:created', onCardCreated)
+      s.off('card:updated', onCardUpdated)
+      s.off('card:deleted', onCardDeleted)
+      s.off('card:moved', onCardMoved)
       s.emit('board:leave', boardId)
     }
   }, [boardId])
